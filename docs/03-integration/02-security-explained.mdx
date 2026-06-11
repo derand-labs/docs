@@ -1,0 +1,64 @@
+---
+sidebar_position: 2
+---
+
+import { 
+  FastestGeneralPurposeComputerHint,
+  SpecializedComputerHint
+} from '@site/src/components/Hint/sample';
+
+# Security Explained
+
+## Entropy Mixing
+
+To ensure security of the final random value generated, your seed is always mixed with additional on-chain entropy before being used as input to the VDF.
+
+```
+seed = H(requestId, user_seed, prevrandao, prev blockhash)
+```
+
+When combined with a properly designed Profile, this ensures that no participant can predict the random result early enough to manipulate the outcome of your application.
+
+
+## Delay Parameter
+DeRand mixes the user-provided seed with entropy from previous blocks.
+
+In addition, the VDF is tightly coupled to a time-based delay. We therefore define a conservative upper bound on the time elapsed between the current block and the previous block:
+
+```
+delta_time = current_block_timestamp - checkpoint_block_timestamp
+```
+
+Here, `checkpoint_block_timestamp` refers to the timestamp of the latest block observed by the requester at the time of submitting the request (not the previous block of the request itself).
+
+This `delta_time` represents the maximum time window available for any adversary to attempt to influence or attack the request.
+
+DeRand uses this time window to derive the VDF iteration count:
+
+```
+delay = delayFactor * ceil(delta_time / profile.delayTime)
+if delay > maxDelay:
+  revert
+
+T = delay * profile.delayScale
+```
+
+Where:
+
+- `delayFactor` increases the safety margin against participants with faster hardware or against validator collusion.
+- `maxDelay` protects the requester from unexpectedly large delays and fees caused by unusually long block intervals.
+- `T` is the final VDF iteration count.
+
+## Profile Selection
+
+VDFs require an unknown-order group, which prevents adversaries from exploiting algebraic shortcuts to evaluate the computation significantly faster than the intended sequential process.
+
+Class groups are a widely studied construction for unknown-order groups and have the advantage of not requiring a trusted setup. Profiles based on class groups with larger discriminants (`D`) generally provide stronger resistance against known attacks on the underlying group structure.
+
+When selecting a Profile:
+
+* Prefer Profiles that use class groups or other well-studied unknown-order group constructions.
+* Profiles with larger discriminants generally provide stronger security.
+* Choose a Profile with fees that are appropriate for the desired level of prover participation and service reliability.
+
+The discriminant size, security assumptions, fees, and other parameters are documented in each [Profile's details](/docs/06-on-chain-info/01-summary.md).

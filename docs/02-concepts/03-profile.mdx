@@ -1,0 +1,58 @@
+---
+
+## sidebar_position: 3
+
+---
+
+import { FastestGeneralPurposeComputerHint } from '@site/src/components/Hint/sample';
+
+# Profile
+
+## Definition
+
+To support multiple security models and allow the protocol to evolve over time, DeRand uses **Profiles**.
+
+A Profile defines the cryptographic assumptions, performance characteristics, and pricing parameters used when processing randomness requests.
+
+A Profile consists of the following properties:
+
+| Property   | Description   |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `verifier` (address)            | Address of the verifier contract. Defines the VDF implementation (RSA groups, class groups, etc.), proof verification mechanism (zkSNARK or fully on-chain), and other cryptographic assumptions. See [VDF](/docs/08-vdf.md).|
+| `delayScale` (uint64)           | Normalization factor for the `delay` parameter. A value of `delay = 1` should require at least `delayTime` to compute on the <FastestGeneralPurposeComputerHint/>. |
+| `delayTime` (uint64, second)    | The theoretical minimum time required to compute a VDF with `T = delayScale` on the <FastestGeneralPurposeComputerHint/>.|
+| `maximumDelay` (uint16)         | Maximum allowed value for the `delay` parameter. |
+| `baseTime` (uint64, second)     | Time allocated for non-VDF operations such as environment setup and proof generation.|
+| `delayFeeInGwei` (uint64, gwei) | Variable fee proportional to the selected `delay` value. See [Request Fee](./04-fees.mdx#request-fee).|
+| `baseFeeInGwei` (uint64, gwei)  | Fixed fee charged for every request created under this Profile. Typically correlated with `baseTime`. See [Request Fee](./04-fees.mdx#request-fee). |
+
+Each Profile is identified by a unique `id`.
+
+## Profile Versions
+
+To maintain economic stability during changing market conditions, each Profile supports multiple **versions**.
+
+A new version may modify only the following parameters:
+
+* `delayFeeInGwei`
+* `baseFeeInGwei`
+
+All versions coexist permanently and operate independently.
+
+When creating a request, users may select any combination of Profile and version.
+
+Likewise, provers may choose to serve only specific Profiles.
+
+Because versions affect pricing only, migrating between versions of the same Profile does not change the underlying cryptographic assumptions or security properties.
+
+Such migrations may become necessary when older versions become too expensive for users or insufficiently profitable for provers.
+
+## Creating New Profiles
+
+Anyone may create a new Profile or add a new version to an existing Profile.
+
+A newly created Profile always starts at version `0`.
+
+Once created, neither a Profile nor any of its versions can be modified. Existing Profiles and versions are immutable. New versions may only be added.
+
+Because Profile creation is permissionless, users should only rely on Profiles whose algorithms, parameters, and security assumptions have been independently reviewed and verified.

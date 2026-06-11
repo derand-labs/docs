@@ -1,0 +1,85 @@
+---
+sidebar_position: 4
+---
+
+import { RequestFeeDetail, RequestFeeShortHand } from '@site/src/components/Hint/sample';
+
+# Fees
+
+## Request Fee
+
+Each Profile defines its own fee model:
+
+```text
+requestFee = baseFee + delay * delayFee
+```
+
+## Callback Execution Fee
+
+- Are charged separately from the request fee.
+- Depend on the actual gas cost at execution time.
+- If the requester does not have sufficient balance, the callback is skipped without affecting the randomness request itself.
+- If the proof submitter does not provide sufficient gas or callback funding, the entire proof submission transaction reverts.
+
+## Collateral
+
+Given a request with fee <RequestFeeDetail text="R"/>.
+
+When the request is created, the requester must deposit native coins equal to <RequestFeeShortHand n="1"/>.
+
+When the request is assigned, the selected prover must provide collateral equal to <RequestFeeShortHand n="106"/>.
+
+The collateral amount is chosen to ensure that all possible penalties can be fully covered.
+
+The maximum possible penalties are:
+
+- Up to <RequestFeeShortHand n="1"/> for failing to submit preview randomness on time.
+- Up to <RequestFeeShortHand n="1"/> for failing to submit the final proof on time.
+- Up to <RequestFeeShortHand n="5"/> for [open-completion rewards and penalties](#open-state).
+- <RequestFeeShortHand n="100"/> for submitting preview randomness that differs from the final verified randomness.
+
+Therefore, the maximum possible penalty is <RequestFeeShortHand n="107"/> (equal to the total collateral provided by the requester and prover).
+
+Collateral is released once a valid proof has been successfully submitted.
+
+## Rewards, Penalties, and Compensation
+
+For each assigned request, the prover must do the following to avoid being slashed:
+
+- Submit preview randomness within `20 * delayTime * delay` seconds.
+- Submit the final proof within:
+  - `20 * delayTime * delay + 1.5 * baseTime` seconds after assignment, or
+  - `1.5 * baseTime` seconds after submitting preview randomness.
+
+Violations result in the following penalties:
+
+Violation                                                     | Penalty
+------------------------------------------------------------- | ----------
+Late preview randomness                                       | Up to <RequestFeeShortHand n="1"/>
+Late final proof                                              | Up to <RequestFeeShortHand n="1"/>
+Preview randomness differs from the final verified randomness | <RequestFeeShortHand n="100"/>
+
+### Open state
+
+If no valid proof is submitted within:
+
+- `20 * delayTime * delay + 3 * baseTime` after assignment, or
+- `3 * baseTime` after submitting preview randomness,
+
+the request enters the **Open** state.
+
+In the **Open** state:
+
+- Anyone may submit a valid proof.
+- The first successful submitter receives a reward between <RequestFeeShortHand n="1"/> and <RequestFeeShortHand n="3"/> (earlier submissions receive larger rewards).
+- The original prover receives an additional penalty between 0 and <RequestFeeShortHand n="4"/> (earlier completion results in a smaller penalty).
+
+The combined Open-state reward and penalty is always between <RequestFeeShortHand n="3"/> and <RequestFeeShortHand n="5"/>.
+
+## Collateral Distribution
+
+- All penalties and rewards are paid from the locked collateral.
+- Penalties compensate the requester.
+- Open-completion rewards are paid to the first participant who successfully submits a valid proof.
+- The [Treasury Budget Fee](/docs/07-treasury.md) is collected, up to the remaining available collateral.
+- Any remaining collateral is returned to the assigned prover.

@@ -1,0 +1,103 @@
+---
+slug: the-illusion-of-randomness-2026-06-10
+title: The Illusion of Randomness
+tags:
+  - story
+---
+
+Randomness is one of the most difficult problems in blockchain systems.
+
+{/* truncate */}
+
+At first glance, generating a random number appears trivial. Every programming language provides random functions. Every operating system exposes entropy sources. Most applications rely on randomness without giving it much thought.
+
+Blockchains are different.
+
+A blockchain is fundamentally deterministic. Every node must execute the same computation and arrive at the same result. If two honest nodes produce different outputs, consensus breaks.
+
+This creates an unusual challenge:
+
+> How can a deterministic system produce a value that nobody can predict?
+
+Yet randomness is required everywhere:
+
+- Lotteries need randomness to select winners.
+- Games need randomness to determine outcomes.
+- NFT projects need randomness for fair trait assignment.
+- Protocols need randomness for validator selection, committee selection, reward distribution, and many other mechanisms.
+
+Without a trustworthy source of randomness, all of these systems become vulnerable to manipulation.
+
+
+## The Secret-Based Approach
+
+Most existing randomness systems solve this problem by introducing a secret.
+
+Instead of relying entirely on public information, they combine a public seed with information known only to one or more providers. As long as the secret remains unknown, the output remains unpredictable.
+
+This idea has proven extremely successful. VRFs, commit-reveal schemes, threshold networks, and many oracle-based randomness systems all rely on some variation of this approach. These systems are not broken; many are backed by strong cryptographic assumptions and have operated securely in production for years.
+
+However, they all share a common property:
+
+> Someone knows something that everyone else does not.
+
+Some systems distribute trust across many participants. Others rely on a single provider. Some use economic incentives to discourage malicious behavior. But ultimately, randomness still depends on parties that possess privileged information.
+
+
+## The Early Knowledge Problem
+
+Whenever randomness depends on a secret, there is typically a period of time during which someone can compute the outcome before everyone else.
+
+The provider knows the secret. Everyone else does not. As a result, one party may learn the answer first.
+
+In many applications this may not matter. In others it can create meaningful advantages. The larger the economic value protected by the randomness, the more valuable this informational asymmetry becomes. Whether it can actually be exploited depends on the surrounding protocol.
+
+Nevertheless, one important fact remains:
+
+> Someone may know the outcome while everyone else is still waiting.
+
+## When Early Knowledge Influences Seed Formation
+
+The more subtle issue appears when the seed itself is still being formed.
+
+Consider a lottery. Suppose ticket sales remain open until block N. After ticket sales close, a randomness request will be generated and resolved at some later point. The final random value will depend on both the seed and a secret known by the randomness provider.
+
+Now imagine the provider expects that it may be selected to serve the future randomness request. Because the provider already knows its secret, it can evaluate many possible future seeds before the seed becomes final.
+
+It can ask questions such as:
+
+- What happens if I buy one more ticket with number X?
+- What happens if I buy from a different account?
+- What happens if I submit another transaction before block N?
+- What happens if the participant list changes in a particular way?
+
+For every hypothetical seed, the provider can simulate the corresponding random outcome. Most of those outcomes may be useless. Some may not.
+
+Suppose one particular sequence of actions produces a future outcome where the provider wins a massive jackpot. The provider now has information that nobody else possesses. Instead of interacting blindly with the system, it can make decisions using knowledge of how those actions affect the eventual randomness.
+
+The important observation is more fundamental:
+
+> Early knowledge transforms seed formation from a blind process into an informed one.
+
+The provider is no longer merely observing the system. It may be able to evaluate and optimize actions before the randomness becomes final. As the value protected by the randomness increases, the incentive to do so increases as well.
+
+## The Liveness Problem
+
+A second challenge appears whenever randomness depends on a secret. If the holder of that secret refuses to reveal it, the randomness cannot be completed.
+
+Most production systems address this through fallback mechanisms. Another provider may take over. A timeout may occur. A backup path may be executed.
+
+These mechanisms improve availability. However, they often introduce an important side effect: **The final random value may change because the underlying secret changed.**
+
+The randomness becomes dependent not only on the request itself, but also on which provider ultimately completes the request. It highlights an inherent vulnerability of traditional architectural designs:
+
+> The result depends on information supplied by privileged participants.
+
+## What a Strong Randomness System Demands
+
+To overcome these structural flaws, a truly robust randomness system must shift from trusting human secrecy to relying on immutable mathematical laws. A strong, manipulation-resistant protocol requires three core pillars:
+
+- **Zero Secrets:** The entire process must be fully public. No party should hold privileged information or private keys that allow them to calculate the outcome ahead of the network.
+- **Provider-Agnostic Output:** The final random value must depend strictly on the request, not the provider. If a node fails, anyone else can complete the computation without changing the outcome.
+
+Ultimately, secure randomness should not rely on economic incentives or the honesty of secret-holders.

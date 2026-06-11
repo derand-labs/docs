@@ -1,0 +1,197 @@
+---
+sidebar_position: 1
+---
+
+import { 
+  FastestGeneralPurposeComputerHint,
+  SpecializedComputerHint
+} from '@site/src/components/Hint/sample';
+
+# Guide
+
+## Choose a Profile
+
+See [What is Profiles](/docs/02-concepts/03-profile.mdx) and [How to choose a Profile](./02-security-explained.mdx#profile-selection).
+
+Available Profiles can be found [here](/docs/06-on-chain-info/01-summary.md).
+
+Effects of choosing a Profile with stronger security assumptions:
+
+- Longer proof generation time.
+- Higher request fees.
+- Stronger resistance against attacks that attempt to break the underlying cryptographic assumptions.
+
+## Fund Your Balance
+
+Estimate the required [request fee](/docs/02-concepts/04-fees.mdx#request-fee) and [callback fee](/docs/02-concepts/04-fees.mdx#callback-execution-fee) for your selected profile, then [deposit](/docs/02-concepts/01-balance.md#regular-balance) funds into your DeRand balance to cover the request.
+
+You may deposit more than the estimated fee to avoid running out of balance for callback or future requests. When a request is submitted, only the fee required for that specific request is charged. Any remaining balance stays under your control and can be [withdrawn](/docs/02-concepts/01-balance.md#regular-balance) at any time.
+
+## Trigger the request
+
+Your application need to submit this request to DeRand:
+
+```solidity
+function requestRandomNumber(
+  uint64 profileId,
+  uint32 profileVersion,
+  uint256 seed,
+  uint16 delayFactor,
+  uint16 maxDelay,
+  address callbackAddress,
+  uint32 callbackGasLimit,
+  bytes calldata checkpointBlockHeaderRlp
+) payable external returns (uint64 requestId);
+```
+
+The protocol will automatically assign a suitable prover to generate and prove the randomness.
+
+## Parameter Explanation
+
+Parameter                        | Description
+-------------------------------- | -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+`profileId` (uint64)               | Profile identifier.
+`profileVersion` (uint32)          | Profile version.
+`seed` (uint256)                   | Entropy provided by the requester. This value is mixed with additional on-chain entropy and used as input to the VDF.
+`delayFactor` (uint16)             | Additional safety multiplier applied to the automatically calculated delay.
+`maxDelay` (uint16)                | Maximum acceptable delay. Requests revert if the calculated delay exceeds this value.
+`callbackAddress` (address)        | Contract address to receive the callback. Set to zero if callbacks are not required.
+`callbackGasLimit` (uint32)        | Gas limit allocated for callback execution.
+`checkpointBlockHeaderRlp` (bytes) | Solidity cannot access the timestamp of the latest block. Therefore, the requester must provide a checkpoint block header. DeRand verifies the header on-chain and uses its timestamp when calculating the effective delay. This value is the RLP-encoded block header. See [how to generate this value](#how-to-generate-checkpointblockheaderrlp)
+
+## Choosing Entropy (`seed`)
+
+In DeRand, entropy (`seed`) is a `uint256` value.
+
+It should be the hash of all information that contributes to the randomness context of your application.
+
+Examples:
+
+- In a lottery system, the seed should be the hash of all lottery tickets.
+- In a loot-box application, the seed may include the timestamp or other information associated with the box-opening action.
+
+## Security Margin
+
+`delayFactor` controls the additional security margin applied to a request.
+
+Larger values increase proof generation time and request fees, but provide stronger protection against both hardware advantages and validator collusion.
+
+### Hardware Resistance
+
+Each unit of `delayFactor` approximately adds one additional unit of resistance against the computational advantage of <FastestGeneralPurposeComputerHint/>.
+
+This relationship is intended to be linear:
+
+- `delayFactor = 1` provides resistance against the computational advantage of a single <FastestGeneralPurposeComputerHint text="fastest general-purpose computer"/>.
+- `delayFactor = 2` provides resistance against approximately twice that computational advantage.
+- `delayFactor = 3` provides resistance against approximately three times that computational advantage.
+
+Recommended values:
+
+| Delay Factor | Security Margin |
+| ------------ | ------------------------------------------------------------------------ |
+| 1–3          | Suitable for most applications against <FastestGeneralPurposeComputerHint/>. |
+| >10          | Intended for applications requiring protection against <SpecializedComputerHint/>. |
+
+### Validator Collusion Resistance
+
+Each additional unit of `delayFactor` approximately increases resistance by one additional consecutive colluding block validator.
+
+Examples:
+
+- `delayFactor = 1` protects against a single malicious attacker.
+- `delayFactor = 2` protects against two consecutive colluding validators.
+- `delayFactor = 3` protects against three consecutive colluding validators.
+
+### Final `delayFactor`
+
+In practice, `delayFactor` should be chosen as the product of:
+
+```text
+delayFactor = hardware_security_factor × collusion_security_factor
+```
+
+## Consuming Randomness
+
+### Callback
+
+Implement the following function in your smart contract to automatically receive the random number once the proof has been verified.
+
+```solidity
+interface ICallback {
+  function receiveRandomNumber(uint256 requestId, uint256 number) external;
+}
+```
+
+Callbacks provide automation and allow applications to react immediately after randomness becomes available.
+
+However, callback execution requires sufficient balance in the DeRand account and therefore is not guaranteed to succeed.
+
+A callback failure does not affect request completion or randomness availability.
+
+### Event Listener
+
+Alternatively, applications may listen for the `RandomNumberGenerated` event and retrieve the stored randomness directly from DeRand using `requestOf`.
+
+For high-value applications, listening to events and reading the final result directly from DeRand is generally preferred over relying solely on callbacks.
+
+```cpp
+event RandomNumber(uint64 indexed requestId, uint256 randomNumber);
+
+enum RequestViewStatus {
+  Pending,
+  Assigned,
+  Fulfilled,
+  Open
+}
+
+struct RequestView {
+  uint256 randomNumber;
+  uint256 seed; uint64 profileId;
+  uint32 profileVersion;
+  uint16 delay;
+  RequestViewStatus status;
+}
+
+function requestOf(uint64 requestId) external view returns (RequestView memory);
+```
+
+## How to generate checkpointBlockHeaderRlp
+
+```go
+import (
+    "github.com/ethereum/go-ethereum/rlp"
+)
+
+// Go
+header, _ := client.HeaderByNumber(ctx, nil)
+rlpBytes, _ := rlp.EncodeToBytes(header)
+```
+
+```javascript
+// Javascript
+import { getBytes } from "ethers";
+import { RLP } from "@ethereumjs/rlp";
+
+const b = await provider.send("eth_getBlockByNumber", ["latest", false]);
+
+const header = [
+  getBytes(b.parentHash),
+  getBytes(b.sha3Uncles),
+  getBytes(b.miner),
+  getBytes(b.stateRoot),
+  getBytes(b.transactionsRoot),
+  getBytes(b.receiptsRoot),
+  getBytes(b.logsBloom),
+  BigInt(b.difficulty),
+  BigInt(b.number),
+  BigInt(b.gasLimit),
+  BigInt(b.gasUsed),
+  BigInt(b.timestamp),
+  getBytes(b.extraData),
+  getBytes(b.mixHash),
+  getBytes(b.nonce),
+];
+
+const rlpBytes = RLP.encode(header);
+```

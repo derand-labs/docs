@@ -1,0 +1,38 @@
+---
+sidebar_position: 2
+---
+
+import Hint from '@site/src/components/Hint';
+
+# Flow
+
+![Flow](./images/flow.jpg)
+
+1. A requester selects the desired parameters and submits a request to DeRand, either off-chain or through a dApp.
+2. DeRand selects an available prover and assigns the request.
+3. The prover generates the random number using a VDF and submits a preview number.
+4. The prover then generates a proof of the VDF computation and submits it for verification.
+
+## Preview Randomness
+
+At present, DeRand uses zkSNARKs to generate proofs.
+
+As a result, users may need to wait a significant amount of time before receiving the final verified random number. Depending on the chosen security configuration, proof generation may take anywhere from tens of minutes to several hours.
+
+To improve user experience, DeRand supports preview random numbers.
+
+A preview random number becomes available immediately after the VDF computation completes.
+
+Since the proof has not yet been generated, the preview value is not yet cryptographically verified. It is merely claimed to be correct by the prover. Submitting an incorrect preview value results in <Hint hint="100 x Request Fee"> [**severe penalties**](/docs/02-concepts/04-fees.mdx#collateral) </Hint>.
+
+Applications **MUST NOT** perform irreversible asset transfers or state transitions based solely on a preview random number.
+
+Preview random numbers should be used exclusively for user experience improvements.
+
+## Open State
+
+If the assigned prover fails to submit a valid proof before the maximum allowed deadline, the request enters the **Open** state.
+
+While in the **Open** state, anyone may submit a valid proof to complete the request and claim the associated reward.
+
+See [Rewards, Penalties, and Compensation](./04-fees.mdx#rewards-penalties-and-compensation) for more details.

@@ -1,0 +1,38 @@
+---
+sidebar_position: 4
+---
+
+# Become A Prover
+
+To be selected by the protocol as a prover, you must register for suitable Profiles.
+
+To become a prover for a Profile, you need:
+
+- A computer whose configuration meets the recommended requirements for that Profile.
+- The minimum amount of ETH stake required by that Profile.
+- A local installation of the Profile.
+- A stable online connection so the prover can receive requests.
+
+## Notes
+
+1. Once a prover is assigned a request, it must complete it before receiving any new requests from any Profile.
+2. A prover may register for at most 30 Profiles. This because the protocol need to reduce gas overhead caused by repeated removal from and re-entry into profile pools when provers are assigned requests and later become available again.
+3. All Profiles share the same prover stake balance. In practice, your prover balance only needs to be high enough to satisfy the highest stake requirement among the Profiles you register for.
+
+## Choosing a Profile
+
+See [What is Profiles](/docs/02-concepts/03-profile.mdx) and [How to choose a Profile](/docs/03-integration/02-security-explained.mdx#profile-selection).
+
+Available Profiles can be found [here](/docs/06-on-chain-info/01-summary.md).
+
+Each Profile includes its recommended hardware configuration, minimum stake requirement.
+
+## Local Profile and Remote Profile
+
+A local Profile is the setup stored on your machine. It is usually tied to the verifier implementation of the corresponding remote Profile.
+
+A remote Profile is the Profile definition stored on DeRand. It includes the on-chain security and economic parameters, together with the Profile versioning model.
+
+## Installation and Registration
+
+See the [Profile details page](/docs/06-on-chain-info/01-summary.md) for instructions on how to install and register each Profile.
