@@ -7,19 +7,19 @@
 		"start": "docusaurus start",
 		"build": "docusaurus build",
 		"swizzle": "docusaurus swizzle",
-		"deploy": "npm run build && wrangler pages deploy ./build",
+		"deploy": "npm run build && wrangler deploy",
 		"clear": "docusaurus clear",
 		"serve": "docusaurus serve",
 		"write-translations": "docusaurus write-translations",
 		"write-heading-ids": "docusaurus write-heading-ids",
 		"typecheck": "tsc",
-		"preview": "npm run build && wrangler pages dev ./build"
+		"preview": "npm run build && wrangler dev"
 	},
 	"dependencies": {
 		"@docusaurus/core": "3.10.1",
 		"@docusaurus/faster": "3.10.1",
-		"@docusaurus/plugin-sitemap": "^3.10.1",
 		"@docusaurus/preset-classic": "3.10.1",
+		"@docusaurus/plugin-sitemap": "^3.10.1",
 		"@mdx-js/react": "^3.0.0",
 		"clsx": "^2.0.0",
 		"prism-react-renderer": "^2.3.0",
@@ -32,7 +32,7 @@
 		"@docusaurus/types": "3.10.1",
 		"@types/react": "^19.0.0",
 		"typescript": "~6.0.2",
-		"wrangler": "^4.99.0"
+		"wrangler": "^4.100.0"
 	},
 	"browserslist": {
 		"production": [
