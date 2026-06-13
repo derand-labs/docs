@@ -156,7 +156,19 @@ struct RequestView {
 function requestOf(uint64 requestId) external view returns (RequestView memory);
 ```
 
-## How to generate checkpointBlockHeaderRlp
+## Change Version
+
+If the selected Profile Version does not have enough available provers to process your request, you may migrate the request to another version of the same profile that has available provers.
+
+A request can be migrated to a different version at most once.
+
+
+```solidity
+function changeProfileVersion(uint64 requestId, uint32 newVersion) external payable;
+```
+
+
+## How To Generate checkpointBlockHeaderRlp
 
 ```go
 import (
