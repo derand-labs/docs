@@ -24,7 +24,7 @@ export default function Home(): ReactNode {
           <section className={styles.center}>
             <h1 className={styles.title}>DeRand</h1>
             <p className={styles.subtitle}>
-              Trustless Verifiable Randomness Infrastructure
+              Trustless Verifiable Randomness Platform
             </p>
           </section>
         </main>
