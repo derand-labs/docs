@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Introduction
 
-DeRand is a **de**centralized randomness protocol powered by [Verifiable **De**lay Functions (VDFs)](/docs/08-vdf.md).
+DeRand is a **de**centralized randomness protocol powered by [Verifiable **De**lay Functions](/docs/08-vdf.md).
 
 Unlike secret-based randomness systems, no participant can learn the final random number before the delay period has completed.
 
@@ -40,6 +40,16 @@ As a result, DeRand is particularly well suited for:
 - Any application where fairness and resistance to manipulation are more important than speed.
 
 DeRand is intentionally **not** designed for applications that require near-instant randomness.
+
+## Why Ethereum?
+
+The security of delay-based randomness is closely tied to time.
+
+A protocol must have a reliable notion of when a request becomes fixed and when the opportunity to influence relevant inputs has ended.
+
+Ethereum's Proof-of-Stake consensus provides a strong timing structure through slots and epochs, making it a natural environment for exploring delay-based randomness.
+
+For this reason, DeRand is currently designed around Ethereum currently.
 
 ## Getting Started
 
